@@ -1,16 +1,39 @@
 ---
-cert_create_ca: false
-cert_use_ownca: false
-cert_use_self_signed: false
+cert_use_ownca: true
+cert_private_key_path: "/etc/ssl/private/"
+cert_csr_path: "/etc/ssl/csr"
+cert_owner: "root"
+cert_group: "ssl-cert"
+cert_ca_type: "RSA"
+cert_ca_size: "4096"
 
-cert_ca_private_key: []
+cert_ca_country_name: "FR"
+cert_ca_organization_name: "My Orga Name"
+cert_ca_mail_address: "admin_mail@example.com"
+cert_ca_common_name: "my_ca_name"
+cert_ca_san: []
+  # Example - YOU MUST ADD THE PREFIX - DNS OR IP
+  # - "DNS:alternative_name.example.com"
+  # - "IP:192.168.1.1"
 
-cert_ca_csr: []
+cert_ca_basic_constraint: []
+  # Exemple:
+  # - CA:TRUE
+cert_ca_path: "/etc/ssl/cert"
+cert_ca_provider: self-signed
 
-cert_ca_cert: []
-
-cert_private_key: []
-
-cert_csr: []
-
-cert_cert: []
+cert_path: "/etc/ssl/cert"
+cert_common_name: "my_cert_common_name"
+cert_type: "RSA"
+cert_size: "4096"
+cert_country_name: "FR"
+cert_organization_name: "My Orga Name"
+cert_mail_address: "admin_mail@example.com"
+cert_provider: self-signed
+cert_san: []
+  # Example - YOU MUST ADD THE PREFIX - DNS OR IP
+  # - "DNS:alternative_name.example.com"
+  # - "IP:192.168.1.1"
+cert_basic_constraint: []
+  # Exemple:
+  # - CA:FALSE

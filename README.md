@@ -1,8 +1,8 @@
-# Ansible Certificates
+# Ansible role Self-Signed Certificates
 
-[![CI](https://github.com/supertarto/ansible-certificates/workflows/CI/badge.svg?event=push)](https://github.com/supertarto/ansible-certificates/actions?query=workflow%3ACI)
+[![CI](https://github.com/supertarto/ansible-role-self-cert/workflows/ci.yml/badge.svg)](https://github.com/supertarto/ansible-role-self-cert/actions/workflows/ci.yml)
 
-Create self-signed certificates with Ansible.
+Create self-signed certificates with Ansible, with our without your own CA. Used for test environment.
 
 ## Requirements
 
@@ -10,141 +10,73 @@ None
 
 ## Tested plateform
 
-* Debian 10 (Buster)
-* Debian 11 (Bulleyes)
+* Debian 12 (Bookworm)
+* Debian 13 (Trixie)
 
 ## Role variables
 
-Boolean variables. Those are used to determine if we want to create our own CA, to create a self-signed certificate, and if we want to create a self-signed cert with our own CA.
-
+True if you want to create a self-cert signed certificate with your own CA. The CA will be created by this role.
 ```yml
-cert_create_ca: false
-cert_use_ownca: false
-cert_use_self_signed: false
+cert_use_ownca: true
 ```
 
-Information about our CA: Private Key, CSR, and Cert.
-
+Your private key path and your csr path.
 ```yml
-cert_ca_private_key: []
-# Exemple
-#  - private_key_path: /etc/ssl/private/default_ca_key.key
-#    size: 4096
-#    type: RSA
-#    owner: root
-#    group: root
-#    mode: "0600"
-
-cert_ca_csr: []
-# Exemple
-#  - path: /etc/ssl/private/default_ca_csr.csr
-#    private_key_path: /etc/ssl/private/default_ca_key.key
-#    country_name: FR
-#    organization_name: []
-#    mail_address: []
-#    common_name: []
-#    owner: root
-#    group: root
-#    mode: "0640"
-#    subject_alt_name: "IP:127.0.0.1"
-#    basic_constraints:
-#      - CA:TRUE
-
-cert_ca_cert: []
-# Exemple
-#  - path: /etc/ssl/certs/default_ca_cert.crt
-#    private_key_path: /etc/ssl/private/default_ca_key.key
-#    csr_path: /etc/ssl/private/default_ca_csr.csr
-#    owner: root
-#    group: root
-#    mode: "0644"
-#    provider: selfsigned
+cert_private_key_path: "/etc/ssl/private/"
+cert_csr_path: "/etc/ssl/csr"
 ```
 
-Information about our Certificate: Private Key, CSR, and Cert. For the cert, if you want it to be signed by your own CA, you must define the **ca_path** and the **ca_privatekey_path**.
-
+Owner and group of your certificates.
 ```yml
-cert_private_key: []
-# Exemple
-#  - private_key_path: /etc/ssl/private/default_cert_key.key
-#    size: 4096
-#    type: RSA
-#    owner: root
-#    group: root
-#    mode: "0600"
-
-cert_csr: []
-# Exemple
-#  - path: /etc/ssl/private/default_cert_csr.csr
-#    private_key_path: /etc/ssl/private/default_cert_key.key
-#    country_name: FR
-#    organization_name: []
-#    mail_address: []
-#    common_name: []
-#    owner: root
-#    group: root
-#    mode: "0640"
-#    subject_alt_name: "IP:127.0.0.1"
-#    basic_constraints:
-#      - CA:FALSE
-
-cert_cert: []
-# Exemple
-#  - path: /etc/ssl/certs/default_cert.crt
-#    private_key_path: /etc/ssl/private/default_cert_key.key
-#    csr_path: /etc/ssl/private/default_cert_csr.csr
-#    ca_path: "/etc/ssl/certs/default_ca_cert.crt"
-#    ca_privatekey_path: "/etc/ssl/private/default_ca_key.key"
-#    owner: root
-#    group: root
-#    mode: "0644"
-#    provider: selfsigned
+cert_owner: "root"
+cert_group: "ssl-cert"
 ```
 
-## Examples
-
+Type and size of your CA key. Only used if **cert_use_ownca** is True.
 ```yml
-  hosts: myhost
-  roles:
-    - role: supertarto.certificates
-  vars:
-    cert_use_self_signed: true  
-    cert_private_key:
-      - private_key_path: /etc/ssl/private/default_cert_key.key
-        size: 4096
-        type: RSA
-        owner: root
-        group: root
-        mode: "0600"
-
-    cert_csr:
-      - path: /etc/ssl/private/default_cert_csr.csr
-        private_key_path: /etc/ssl/private/default_cert_key.key
-        country_name: FR
-        organization_name: []
-        mail_address: []
-        common_name: []
-        owner: root
-        group: root
-        mode: "0640"
-        subject_alt_name: "IP:127.0.0.1"
-        basic_constraints:
-          - CA:FALSE
-
-    cert_cert:
-      - path: /etc/ssl/certs/default_cert.crt
-        private_key_path: /etc/ssl/private/default_cert_key.key
-        csr_path: /etc/ssl/private/default_cert_csr.csr
-        owner: root
-        group: root
-        mode: "0644"
-        provider: selfsigned
+cert_ca_type: "RSA"
+cert_ca_size: "4096"
 ```
 
-## Installation
+Information about your CA. Only used if **cert_use_ownca** is True. For the SAN, if needed, **You have to add "IP:" or "DNS:" before your alternate name**
+```yml
+cert_ca_country_name: "FR"
+cert_ca_organization_name: "My Orga Name"
+cert_ca_mail_address: "admin_mail@example.com"
+cert_ca_common_name: "my_ca_name"
+cert_ca_san: []
+  # Example - YOU MUST ADD THE PREFIX - DNS OR IP
+  # - "DNS:alternative_name.example.com"
+  # - "IP:192.168.1.1"
 
-```bash
-ansible-galaxy install supertarto.certificates
+cert_ca_basic_constraint: []
+  # Exemple:
+  # - CA:TRUE
+```
+
+Path where the CA cert will be created.
+```yml
+cert_ca_path: "/etc/ssl/cert"
+cert_ca_provider: self-signed
+```
+
+Information about the cert. Path, type of key, size.... For the SAN, if needed, **You have to add "IP:" or "DNS:" before your alternate name**
+```yml
+cert_path: "/etc/ssl/cert"
+cert_common_name: "my_cert_common_name"
+cert_type: "RSA"
+cert_size: "4096"
+cert_country_name: "FR"
+cert_organization_name: "My Orga Name"
+cert_mail_address: "admin_mail@example.com"
+cert_provider: self-signed
+cert_san: []
+  # Example - YOU MUST ADD THE PREFIX - DNS OR IP
+  # - "DNS:alternative_name.example.com"
+  # - "IP:192.168.1.1"
+cert_basic_constraint: []
+  # Exemple:
+  # - CA:FALSE
 ```
 
 ## License

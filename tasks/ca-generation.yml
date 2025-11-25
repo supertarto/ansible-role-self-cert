@@ -1,35 +1,33 @@
 ---
 - name: Create CA private key
-  ansible.builtin.openssl_privatekey:
-    path: "{{ item.private_key_path }}"
-    type: "{{ item.type }}"
-    owner: "{{ item.owner }}"
-    group: "{{ item.group }}"
-    mode: "{{ item.mode }}"
-  with_items: "{{ cert_ca_private_key }}"
+  community.crypto.openssl_privatekey:
+    path: "{{ cert_private_key_path }}/{{ cert_ca_common_name }}.key"
+    type: "{{ cert_ca_type }}"
+    size: "{{ cert_ca_size }}"
+    owner: "{{ cert_owner }}"
+    group: "{{ cert_group }}"
+    mode: "0600"
 
 - name: Create a CSR for the CA certificate.
-  ansible.builtin.openssl_csr:
-    path: "{{ item.path }}"
-    privatekey_path: "{{ item.private_key_path }}"
-    country_name: "{{ item.country_name }}"
-    organization_name: "{{ item.organization_name }}"
-    email_address: "{{ item.mail_address }}"
-    common_name: "{{ item.common_name }}"
-    owner: "{{ item.owner }}"
-    group: "{{ item.group }}"
-    subject_alt_name: "{{ item.subject_alt_name }}"
-    basic_constraints: "{{ item.basic_constraints }}"
-    mode: "{{ item.mode }}"
-  with_items: "{{ cert_ca_csr }}"
+  community.crypto.openssl_csr:
+    path: "{{ cert_csr_path }}/{{ cert_ca_common_name }}.csr"
+    privatekey_path: "{{ cert_private_key_path }}/{{ cert_ca_common_name }}.key"
+    country_name: "{{ cert_ca_country_name }}"
+    organization_name: "{{ cert_ca_organization_name }}"
+    email_address: "{{ cert_ca_mail_address }}"
+    common_name: "{{ cert_ca_common_name }}"
+    owner: "{{ cert_owner }}"
+    group: "{{ cert_group }}"
+    subject_alt_name: "{{ cert_ca_san }}"
+    basic_constraints: "{{ cert_ca_basic_constraint }}"
+    mode: "0644"
 
 - name: Create the CA certificate
-  ansible.builtin.openssl_certificate:
-    path: "{{ item.path }}"
-    privatekey_path: "{{ item.private_key_path }}"
-    csr_path: "{{ item.csr_path }}"
-    owner: "{{ item.owner }}"
-    group: "{{ item.group }}"
-    provider: "{{ item.provider }}"
-    mode: "{{ item.mode }}"
-  with_items: "{{ cert_ca_cert }}"
+  community.crypto.openssl_certificate:
+    path: "{{ cert_ca_path }}/{{ cert_ca_common_name }}.pem"
+    privatekey_path: "{{ cert_private_key_path }}/{{ cert_ca_common_name }}.key"
+    csr_path: "{{ cert_csr_path }}/{{ cert_ca_common_name }}.csr"
+    owner: "{{ cert_owner }}"
+    group: "{{ cert_group }}"
+    provider: "{{ cert_ca_provider }}"
+    mode: "0644"

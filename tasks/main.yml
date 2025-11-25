@@ -1,64 +1,74 @@
 ---
-- name: Install requirements
-  ansible.builtin.package:
-    name: ["openssl", "python3-pip", "python3-setuptools", "python3-dev"]
+- name: Install OpenSSL and python3-cryptography
+  ansible.builtin.apt:
+    name:
+      - openssl
+      - python3-cryptography
     state: present
+    update_cache: true
 
-- name: Install pip requirements
-  ansible.builtin.pip:
-    name: ["cryptography"]
-    state: present
-    executable: "pip3"
+- name: Create Private Key directory
+  ansible.builtin.file:
+    path: "{{ cert_private_key_path }}"
+    state: directory
+    owner: "{{ cert_owner }}"
+    group: "{{ cert_group }}"
+    mode: "0750"
 
-- include_tasks: ca-generation.yml
+- name: Create CSR directory
+  ansible.builtin.file:
+    path: "{{ csr_output_path }}"
+    state: directory
+    owner: "{{ cert_owner }}"
+    group: "{{ cert_group }}"
+    mode: "0755"
+
+- name: Includa CA tasks
+  include_tasks: ca-generation.yml
   when: cert_create_ca
 
 - name: Create Cert private key
-  ansible.builtin.openssl_privatekey:
-    path: "{{ item.private_key_path }}"
+  community.crypto.openssl_privatekey:
+    path: "{{ cert_private_key_path }}/{{ cert_common_name }}.key"
     type: "{{ item.type }}"
-    owner: "{{ item.owner }}"
-    group: "{{ item.group }}"
-    mode: "{{ item.mode }}"
-  with_items: "{{ cert_private_key }}"
+    owner: "{{ cert_owner }}"
+    group: "{{ cert_group }}"
+    mode: "0600"
 
 - name: Create a CSR for the certificate.
-  ansible.builtin.openssl_csr:
-    path: "{{ item.path }}"
-    privatekey_path: "{{ item.private_key_path }}"
-    country_name: "{{ item.country_name }}"
-    organization_name: "{{ item.organization_name }}"
-    email_address: "{{ item.mail_address }}"
-    common_name: "{{ item.common_name }}"
-    owner: "{{ item.owner }}"
-    group: "{{ item.group }}"
-    subject_alt_name: "{{ item.subject_alt_name }}"
-    basic_constraints: "{{ item.basic_constraints }}"
-    mode: "{{ item.mode }}"
-  with_items: "{{ cert_csr }}"
+  community.crypto.openssl_csr:
+    path: "{{ cert_csr_path }}/{{ cert_common_name }}.csr"
+    privatekey_path: "{{ cert_private_key_path }}/{{ cert_common_name }}.key"
+    country_name: "{{ cert_country_name }}"
+    organization_name: "{{ cert_organization_name }}"
+    email_address: "{{ cert_mail_address }}"
+    common_name: "{{ cert_common_name }}"
+    owner: "{{ cert_owner }}"
+    group: "{{ cert_group }}"
+    subject_alt_name: "{{ cert_san }}"
+    basic_constraints: "{{ cert_basic_constraint }}"
+    mode: "0644"
 
 - name: Create a self-signed certificate(Without our CA)
-  ansible.builtin.openssl_certificate:
-    path: "{{ item.path }}"
-    privatekey_path: "{{ item.private_key_path }}"
-    csr_path: "{{ item.csr_path }}"
-    owner: "{{ item.owner }}"
-    group: "{{ item.group }}"
-    provider: "{{ item.provider }}"
-    mode: "{{ item.mode }}"
-  with_items: "{{ cert_cert }}"
-  when: cert_use_self_signed and not cert_use_ownca
+  community.crypto.openssl_certificate:
+    path: "{{ cert_path }}/{{ cert_common_name }}.pem"
+    privatekey_path: "{{ cert_private_key_path }}/{{ cert_common_name }}.key"
+    csr_path: "{{ cert_csr_path }}/{{ cert_common_name }}.csr"
+    owner: "{{ cert_owner }}"
+    group: "{{ cert_group }}"
+    provider: "{{ cert_provider }}"
+    mode: "0644"
+  when: not cert_use_ownca
 
 - name: Create a self-signed certificate(With our CA)
-  ansible.builtin.openssl_certificate:
-    path: "{{ item.path }}"
-    privatekey_path: "{{ item.private_key_path }}"
-    csr_path: "{{ item.csr_path }}"
-    ownca_path: "{{ item.ca_path }}"
-    ownca_privatekey_path: "{{ item.ca_privatekey_path }}"
-    owner: "{{ item.owner }}"
-    group: "{{ item.group }}"
-    provider: "{{ item.provider }}"
-    mode: "{{ item.mode }}"
-  with_items: "{{ cert_cert }}"
-  when: cert_use_self_signed and cert_use_ownca
+  community.crypto.openssl_certificate:
+    path: "{{ cert_path }}/{{ cert_common_name }}.pem"
+    privatekey_path: "{{ cert_private_key_path }}/{{ cert_common_name }}.key"
+    csr_path: "{{ cert_csr_path }}/{{ cert_common_name }}.csr"
+    ownca_path: "{{ cert_ca_path }}/{{ cert_ca_common_name }}.pem"
+    ownca_privatekey_path: "{{ cert_private_key_path }}/{{ cert_ca_common_name }}.key"
+    owner: "{{ cert_owner }}"
+    group: "{{ cert_group }}"
+    provider: "{{ cert_provider }}"
+    mode: "0644"
+  when: cert_use_ownca
