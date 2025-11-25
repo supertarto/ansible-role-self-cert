@@ -1,6 +1,6 @@
 # Ansible role Self-Signed Certificates
 
-[![CI](https://github.com/supertarto/ansible-role-self-cert/workflows/ci.yml/badge.svg)](https://github.com/supertarto/ansible-role-self-cert/actions/workflows/ci.yml)
+[![CI](https://github.com/supertarto/ansible-role-self-cert/actions/workflows/ci.yml/badge.svg)](https://github.com/supertarto/ansible-role-self-cert/actions/workflows/ci.yml)
 
 Create self-signed certificates with Ansible, with our without your own CA. Used for test environment.
 
